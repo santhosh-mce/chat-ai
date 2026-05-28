@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import connectDB from "@/lib/db";
+import cloudinary from "@/lib/cloudinary";
+import Image from "@/models/Image";
 
 // Enhance prompt using OpenRouter
 async function enhancePrompt(userInput: string): Promise<string> {
@@ -112,8 +115,30 @@ export async function POST(request: NextRequest) {
           const base64 = Buffer.from(imageBuffer).toString('base64');
           const contentType = response.headers.get("content-type") || "image/png";
           const dataUrl = `data:${contentType};base64,${base64}`;
-          
-          return NextResponse.json({ url: dataUrl });
+
+          try {
+            await connectDB();
+            const uploadResponse = await cloudinary.uploader.upload(dataUrl, {
+              folder: "ai-images",
+              resource_type: "image",
+            });
+
+            const savedImage = await Image.create({
+              prompt: enhancedPrompt,
+              imageUrl: uploadResponse.secure_url,
+              publicId: uploadResponse.public_id,
+            });
+
+            return NextResponse.json({
+              url: uploadResponse.secure_url,
+              publicId: uploadResponse.public_id,
+              imageId: savedImage._id,
+              saved: true,
+            });
+          } catch (uploadError) {
+            console.error("Cloudinary upload failed:", uploadError);
+            return NextResponse.json({ url: dataUrl, saved: false });
+          }
         }
 
         if (response.status === 502 || response.status === 503) {

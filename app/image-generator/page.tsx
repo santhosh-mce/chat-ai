@@ -1,14 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ImageCard from "@/components/ImageCard";
 import { Send, Image as ImageIcon, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function ImageGenerator() {
   const [prompt, setPrompt] = useState("");
-  const [images, setImages] = useState<{ url: string; prompt: string }[]>([]);
+  const [images, setImages] = useState<{ _id?: string; url: string; prompt: string; publicId?: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const response = await fetch("/api/images");
+        if (!response.ok) return;
+        const data = await response.json();
+        setImages(data.map((item: any) => ({ _id: item._id, url: item.imageUrl, prompt: item.prompt, publicId: item.publicId })));
+      } catch (error) {
+        console.error("Failed to load image history", error);
+      }
+    };
+
+    fetchHistory();
+  }, []);
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +74,7 @@ export default function ImageGenerator() {
         img.src = url;
       });
 
-      setImages(prev => [{ url, prompt: prompt.trim() }, ...prev]);
+      setImages(prev => [{ _id: data.imageId, url, prompt: prompt.trim(), publicId: data.publicId }, ...prev]);
       setPrompt("");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to generate image";
@@ -101,9 +116,27 @@ export default function ImageGenerator() {
         </form>
 
         {images.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {images.map((img, i) => (
-              <ImageCard key={i} url={img.url} prompt={img.prompt} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {images.map((img) => (
+              <ImageCard
+                key={img._id || img.url}
+                url={img.url}
+                prompt={img.prompt}
+                onDelete={async () => {
+                  if (!img._id) return;
+                  try {
+                    const response = await fetch("/api/images", {
+                      method: "DELETE",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ id: img._id, publicId: img.publicId }),
+                    });
+                    if (!response.ok) throw new Error("Delete failed");
+                    setImages((prev) => prev.filter((item) => (item._id || item.url) !== (img._id || img.url)));
+                  } catch (error) {
+                    console.error("Delete image failed", error);
+                  }
+                }}
+              />
             ))}
           </div>
         ) : (

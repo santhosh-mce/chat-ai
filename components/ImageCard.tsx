@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Download, AlertCircle } from "lucide-react";
+import { Download, AlertCircle, Trash2 } from "lucide-react";
 
 interface ImageCardProps {
   url: string;
   prompt: string;
+  onDelete?: () => Promise<void> | void;
 }
 
-export default function ImageCard({ url, prompt }: ImageCardProps) {
+export default function ImageCard({ url, prompt, onDelete }: ImageCardProps) {
   const [hasError, setHasError] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
@@ -68,14 +69,29 @@ export default function ImageCard({ url, prompt }: ImageCardProps) {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-end">
         <p className="text-sm text-white line-clamp-2 mb-3">{prompt}</p>
-        <button
-          onClick={handleDownload}
-          disabled={isDownloading}
-          className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl w-fit backdrop-blur-md transition-colors text-sm disabled:opacity-50"
-        >
-          <Download size={16} />
-          {isDownloading ? "Downloading..." : "Download"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleDownload}
+            disabled={isDownloading}
+            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl w-fit backdrop-blur-md transition-colors text-sm disabled:opacity-50"
+          >
+            <Download size={16} />
+            {isDownloading ? "Downloading..." : "Download"}
+          </button>
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-white px-4 py-2 rounded-xl w-fit backdrop-blur-md transition-colors text-sm"
+            >
+              <Trash2 size={16} />
+              Delete
+            </button>
+          )}
+        </div>
       </div>
     </motion.div>
   );
