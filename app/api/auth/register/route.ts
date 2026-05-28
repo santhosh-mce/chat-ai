@@ -29,12 +29,22 @@ export async function POST(req: Request) {
 
     const token = generateToken(user._id.toString());
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       _id: user._id,
       name: user.name,
       email: user.email,
       token,
     }, { status: 201 });
+
+    response.cookies.set("token", token, {
+      httpOnly: true,
+      path: "/",
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 30,
+    });
+
+    return response;
   } catch (error) {
     console.error("Register Error:", error);
     return NextResponse.json({ message: "Server error" }, { status: 500 });

@@ -89,13 +89,25 @@ export async function POST(req: Request) {
     if (userId && chatId) {
       const userMessage = messages[messages.length - 1];
       try {
+        const existingChat = await Chat.findById(chatId);
+        const firstPrompt = String(userMessage.content || "").trim();
+        const chatTitle = firstPrompt.length > 30 ? `${firstPrompt.slice(0, 30)}...` : firstPrompt;
+
+        if (existingChat && (!existingChat.title || existingChat.title === "New Chat")) {
+          await Chat.findByIdAndUpdate(chatId, {
+            title: chatTitle,
+            updatedAt: Date.now(),
+          });
+        } else {
+          await Chat.findByIdAndUpdate(chatId, { updatedAt: Date.now() });
+        }
+
         await Message.create({
           chatId,
           role: "user",
           content: userMessage.content,
           model: selectedModel,
         });
-        await Chat.findByIdAndUpdate(chatId, { updatedAt: Date.now() });
       } catch (dbError) {
         console.error("Error saving user message:", dbError);
         // Continue anyway - don't fail the response

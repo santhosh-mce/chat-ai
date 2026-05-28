@@ -9,9 +9,18 @@ export default function Navbar() {
   const { toggleSidebar, user, logout } = useStore();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      logout();
+      router.replace("/login");
+      if (typeof window !== "undefined") {
+        window.history.replaceState(null, "", "/login");
+      }
+    }
   };
 
   return (

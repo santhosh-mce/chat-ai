@@ -38,7 +38,7 @@ export default function AuthForm({ type }: { type: "login" | "register" }) {
       }
 
       setUser(data);
-      router.push("/dashboard");
+      router.replace("/dashboard");
     } catch (err: any) {
       setError(err.message);
     } finally {

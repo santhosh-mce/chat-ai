@@ -15,16 +15,27 @@ interface AppState {
   toggleSidebar: () => void;
 }
 
+const getStoredUser = (): User | null => {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const stored = localStorage.getItem("user");
+    return stored ? (JSON.parse(stored) as User) : null;
+  } catch {
+    return null;
+  }
+};
+
 export const useStore = create<AppState>((set) => ({
-  user: null,
+  user: getStoredUser(),
   setUser: (user) => {
-    if (user) {
-      if (typeof window !== "undefined") {
+    if (typeof window !== "undefined") {
+      if (user) {
         localStorage.setItem("user", JSON.stringify(user));
-      }
-    } else {
-      if (typeof window !== "undefined") {
+        localStorage.setItem("token", user.token);
+      } else {
         localStorage.removeItem("user");
+        localStorage.removeItem("token");
       }
     }
     set({ user });
@@ -32,6 +43,7 @@ export const useStore = create<AppState>((set) => ({
   logout: () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("user");
+      localStorage.removeItem("token");
     }
     set({ user: null });
   },

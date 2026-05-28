@@ -13,6 +13,11 @@ export default function Sidebar() {
   const router = useRouter();
   const [chats, setChats] = useState<any[]>([]);
 
+  const realChats = chats.filter((chat) => {
+    const title = String(chat?.title || "").trim();
+    return title.length > 0 && title.toLowerCase() !== "new chat";
+  });
+
   useEffect(() => {
     if (user) {
       fetchChats();
@@ -89,17 +94,31 @@ export default function Sidebar() {
 
             <div>
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">Recent Chats</div>
-              <div className="space-y-1">
-                {chats.map((chat) => (
-                  <Link
-                    key={chat._id}
-                    href={`/chat/${chat._id}`}
-                    className={`flex items-center gap-3 p-3 rounded-xl transition-colors truncate ${pathname === `/chat/${chat._id}` ? 'bg-white/15 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
-                  >
-                    <MessageSquare size={18} className="shrink-0" />
-                    <span className="truncate text-sm">{chat.title}</span>
-                  </Link>
-                ))}
+              <div className="max-h-[40vh] overflow-y-auto pr-1 space-y-1.5">
+                {realChats.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-white/10 bg-white/5 px-4 py-3 text-sm text-gray-400">No real conversations yet.</div>
+                ) : (
+                  realChats.map((chat) => {
+                    const isActive = pathname === `/chat/${chat._id}`;
+                    const title = String(chat.title || "Untitled");
+                    const displayTitle = title.length > 30 ? `${title.slice(0, 30)}...` : title;
+
+                    return (
+                      <Link
+                        key={chat._id}
+                        href={`/chat/${chat._id}`}
+                        className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 ${
+                          isActive
+                            ? "bg-white/15 text-white shadow-lg shadow-blue-500/10"
+                            : "text-gray-300 hover:bg-white/10 hover:text-white"
+                        }`}
+                      >
+                        <MessageSquare size={16} className="shrink-0 text-blue-300" />
+                        <span className="truncate text-sm font-medium">{displayTitle}</span>
+                      </Link>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
