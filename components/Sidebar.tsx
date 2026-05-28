@@ -2,7 +2,7 @@
 
 import { useStore } from "@/store/useStore";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Plus, Settings, Image as ImageIcon, History } from "lucide-react";
+import { MessageSquare, Plus, Settings, Image as ImageIcon, History, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -63,6 +63,32 @@ export default function Sidebar() {
     }
   };
 
+  const deleteChat = async (id: string) => {
+    if (!user) return;
+
+    const confirmed = window.confirm("Delete this conversation?");
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`/api/chats/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+
+      if (!res.ok) return;
+
+      setChats((prev) => prev.filter((chat) => chat._id !== id));
+
+      if (pathname === `/chat/${id}`) {
+        router.push("/chat/new");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isSidebarOpen && (
@@ -104,18 +130,32 @@ export default function Sidebar() {
                     const displayTitle = title.length > 30 ? `${title.slice(0, 30)}...` : title;
 
                     return (
-                      <Link
+                      <div
                         key={chat._id}
-                        href={`/chat/${chat._id}`}
-                        className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200 ${
+                        className={`group flex items-center justify-between gap-2 rounded-xl px-3 py-2 transition-all duration-200 ${
                           isActive
                             ? "bg-white/15 text-white shadow-lg shadow-blue-500/10"
                             : "text-gray-300 hover:bg-white/10 hover:text-white"
                         }`}
                       >
-                        <MessageSquare size={16} className="shrink-0 text-blue-300" />
-                        <span className="truncate text-sm font-medium">{displayTitle}</span>
-                      </Link>
+                        <Link href={`/chat/${chat._id}`} className="flex min-w-0 flex-1 items-center gap-3 rounded-lg">
+                          <MessageSquare size={16} className="shrink-0 text-blue-300" />
+                          <span className="truncate text-sm font-medium">{displayTitle}</span>
+                        </Link>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            deleteChat(chat._id);
+                          }}
+                          className="rounded-full p-1.5 text-gray-400 opacity-0 transition hover:bg-white/10 hover:text-white group-hover:opacity-100 focus:opacity-100 focus:outline-none sm:opacity-100 sm:hover:bg-white/10"
+                          aria-label="Delete conversation"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     );
                   })
                 )}
