@@ -29,6 +29,7 @@ const MODELS = [
   { id: "nousresearch/hermes-3-llama-3.1-405b:free", name: "Nous: Hermes 3 405B Instruct (free)" },
   { id: "qwen/qwen3-coder:free", name: "Qwen: Qwen3 Coder 480B A35B (free)" },
   { id: "alfredpros/codellama-7b-instruct-solidity", name: "AlfredPros: CodeLLaMa 7B Instruct Solidity" },
+  { id: "openrouter/owl-alpha", name: "Owl Alpha" },
 
 ];
 
