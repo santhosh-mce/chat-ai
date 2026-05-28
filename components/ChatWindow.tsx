@@ -16,7 +16,7 @@ interface Message {
 export default function ChatWindow({ chatId, initialMessages = [] }: { chatId?: string, initialMessages?: Message[] }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
-  const [model, setModel] = useState("z-ai/glm-4.5-air:free");
+  const model = useStore((state) => state.selectedModel);
   const bottomRef = useRef<HTMLDivElement>(null);
   const { user } = useStore();
   const router = useRouter();
@@ -129,13 +129,8 @@ export default function ChatWindow({ chatId, initialMessages = [] }: { chatId?: 
 
   return (
     <div className="flex flex-col h-full bg-[#09090b] relative">
-      <div className="absolute top-0 w-full p-3 sm:p-4 flex justify-end z-10 pointer-events-none">
-        <div className="pointer-events-auto">
-          <ModelSelector selectedModel={model} onModelSelect={setModel} />
-        </div>
-      </div>
-      
-      <div className="flex-1 overflow-y-auto pb-32 pt-16">
+      {/* ModelSelector removed from top bar. Model selection will be handled in Sidebar. */}
+      <div className="flex-1 overflow-y-auto pb-6 pt-16">
         <div className="w-full max-w-5xl mx-auto flex flex-col min-h-full px-4 sm:px-6 md:px-8">
           {messages.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center px-2 sm:px-4">
@@ -172,8 +167,8 @@ export default function ChatWindow({ chatId, initialMessages = [] }: { chatId?: 
           <div ref={bottomRef} />
         </div>
       </div>
-
-      <div className="absolute bottom-0 w-full bg-gradient-to-t from-[#09090b] via-[#09090b]/80 to-transparent pt-10">
+ 
+      <div className="w-full border-t border-white/10 bg-black/20 shrink-0">
         <ChatInput onSend={handleSend} isLoading={isLoading} onStop={handleStop} />
       </div>
     </div>

@@ -12,7 +12,7 @@ const publicPaths = new Set(["/", "/login", "/register"]);
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, setUser } = useStore();
+  const { user, setUser, isSidebarOpen } = useStore();
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -33,9 +33,29 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     } catch {
       setUser(null);
     } finally {
+      if (window.innerWidth < 768) {
+        useStore.setState({ isSidebarOpen: false });
+      } else {
+        useStore.setState({ isSidebarOpen: true });
+      }
       setHydrated(true);
     }
   }, [setUser]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        useStore.setState({ isSidebarOpen: false });
+      } else {
+        useStore.setState({ isSidebarOpen: true });
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -71,7 +91,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <Navbar />
           <div className="flex flex-1 overflow-hidden">
             <Sidebar />
-            <main className="flex-1 overflow-hidden">{children}</main>
+            <main className={`flex-1 overflow-hidden ${isSidebarOpen ? "hidden md:block" : "block"}`}>{children}</main>
           </div>
         </>
       ) : (

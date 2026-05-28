@@ -86,31 +86,31 @@ export default function ImageGenerator() {
   };
 
   return (
-    <div className="h-full overflow-y-auto p-8 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/10 via-[#09090b] to-[#09090b]">
+    <div className="h-full overflow-y-auto p-4 sm:p-8 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/10 via-[#09090b] to-[#09090b]">
       <div className="max-w-6xl mx-auto flex flex-col h-full">
         <div className="text-center mb-12">
           <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center mx-auto mb-6 border border-white/10">
             <ImageIcon className="text-blue-400" size={32} />
           </div>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Image Generator</h1>
-          <p className="text-gray-400 text-lg">Turn your imagination into stunning visuals instantly.</p>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">Image Generator</h1>
+          <p className="text-gray-400 text-base sm:text-lg">Turn your imagination into stunning visuals instantly.</p>
         </div>
 
         <form onSubmit={handleGenerate} className="w-full max-w-3xl mx-auto mb-16">
-          <div className="relative flex items-center bg-white/5 border border-white/10 rounded-full p-2 focus-within:ring-2 focus-within:ring-blue-500/50 transition-all shadow-2xl shadow-blue-500/5">
+          <div className="relative flex items-center bg-white/5 border border-white/10 rounded-full p-1.5 sm:p-2 focus-within:ring-2 focus-within:ring-blue-500/50 transition-all shadow-2xl shadow-blue-500/5">
             <input
               type="text"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="A futuristic city with flying cars at sunset..."
-              className="w-full bg-transparent text-white placeholder-gray-500 outline-none px-6 py-3"
+              placeholder="A futuristic city with flying cars..."
+              className="w-full bg-transparent text-sm sm:text-base text-white placeholder-gray-500 outline-none px-4 sm:px-6 py-2.5 sm:py-3"
             />
             <button
               type="submit"
               disabled={!prompt.trim() || isLoading}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full font-medium transition-all flex items-center gap-2 disabled:opacity-50"
+              className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-full text-sm sm:text-base font-medium transition-all flex items-center gap-2 disabled:opacity-50 shrink-0"
             >
-              {isLoading ? <Loader2 size={20} className="animate-spin" /> : "Generate"}
+              {isLoading ? <Loader2 size={16} className="animate-spin" /> : "Generate"}
             </button>
           </div>
         </form>

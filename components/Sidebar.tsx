@@ -1,6 +1,7 @@
 "use client";
 
 import { useStore } from "@/store/useStore";
+import ModelSelector from "./ModelSelector";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, Plus, Settings, Image as ImageIcon, History, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -18,9 +19,34 @@ export default function Sidebar() {
     return title.length > 0 && title.toLowerCase() !== "new chat";
   });
 
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isSidebarOpen && window.innerWidth < 768) {
+      document.body.classList.add("overflow-hidden");
+    } else {
+      document.body.classList.remove("overflow-hidden");
+    }
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, [isSidebarOpen]);
+
   useEffect(() => {
     if (user) {
       fetchChats();
+    }
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      useStore.setState({ isSidebarOpen: false });
     }
   }, [user, pathname]);
 
@@ -89,16 +115,29 @@ export default function Sidebar() {
     }
   };
 
+  const selectedModel = useStore((state) => state.selectedModel);
+  const setSelectedModel = useStore((state) => state.setSelectedModel);
+
+  // Always show sidebar on desktop (md and up), toggle only on mobile
+  const showSidebar = typeof window !== "undefined" && window.innerWidth >= 768 ? true : isSidebarOpen;
+
   return (
     <AnimatePresence>
-      {isSidebarOpen && (
-        <motion.aside
-          initial={{ width: 0, opacity: 0 }}
-          animate={{ width: 280, opacity: 1 }}
-          exit={{ width: 0, opacity: 0 }}
-          className="h-[calc(100vh-4rem)] bg-black/40 border-r border-white/10 flex flex-col backdrop-blur-xl overflow-hidden shrink-0"
-        >
-          <div className="flex-1 overflow-y-auto p-4 w-[280px] space-y-6">
+      {showSidebar && (
+        <>
+          {/* Backdrop overlay for mobile screens */}
+          <div
+            onClick={() => useStore.setState({ isSidebarOpen: false })}
+            className="fixed inset-0 bg-black/60 backdrop-blur-md z-40 md:hidden"
+          />
+          <motion.aside
+            initial={isMobile ? { x: "-100%" } : { width: 0, opacity: 0 }}
+            animate={isMobile ? { x: 0 } : { width: 280, opacity: 1 }}
+            exit={isMobile ? { x: "-100%" } : { width: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed inset-y-0 left-0 z-50 w-[80vw] max-w-[320px] bg-[#09090b]/95 border-r border-white/10 flex flex-col backdrop-blur-xl overflow-hidden shrink-0 md:fixed md:inset-y-0 md:left-0 md:top-0 md:h-screen md:w-[280px] md:max-w-none md:z-40 md:bg-black/40"
+          >
+          <div className="flex-1 overflow-y-auto p-4 w-full md:w-[280px] space-y-6">
             <button
               onClick={createNewChat}
               className="w-full flex items-center gap-3 bg-white/10 hover:bg-white/20 p-3 rounded-2xl transition-colors text-white"
@@ -163,13 +202,15 @@ export default function Sidebar() {
             </div>
           </div>
           
-          <div className="p-4 w-[280px] border-t border-white/10 bg-black/10">
+          <div className="p-4 w-full md:w-[280px] border-t border-white/10 bg-black/10 flex flex-col gap-4">
+            <ModelSelector selectedModel={selectedModel} onModelSelect={setSelectedModel} />
             <Link href="/settings" className="flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
               <Settings size={20} />
               <span>Settings</span>
             </Link>
           </div>
         </motion.aside>
+        </>
       )}
     </AnimatePresence>
   );

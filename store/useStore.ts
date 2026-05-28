@@ -13,6 +13,8 @@ interface AppState {
   logout: () => void;
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
+  selectedModel: string;
+  setSelectedModel: (model: string) => void;
 }
 
 const getStoredUser = (): User | null => {
@@ -49,4 +51,6 @@ export const useStore = create<AppState>((set) => ({
   },
   isSidebarOpen: true,
   toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
+  selectedModel: "z-ai/glm-4.5-air:free",
+  setSelectedModel: (model) => set({ selectedModel: model }),
 }));

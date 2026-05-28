@@ -55,7 +55,7 @@ export default function ModelSelector({ selectedModel, onModelSelect }: ModelSel
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-full mt-2 left-0 w-64 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl z-20 overflow-hidden">
+          <div className="absolute bottom-full mb-2 right-0 w-64 max-h-60 overflow-y-auto bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl z-20">
             {MODELS.map((model) => (
               <button
                 key={model.id}

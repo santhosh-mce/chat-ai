@@ -55,7 +55,7 @@ export default function Dashboard() {
   if (!user) return null;
 
   return (
-    <div className="h-full overflow-y-auto p-8">
+    <div className="h-full overflow-y-auto p-4 sm:p-8">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Welcome back, {user.name}</h1>
         
