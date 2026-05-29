@@ -44,33 +44,45 @@ export default function ModelSelector({ selectedModel, onModelSelect }: ModelSel
   const currentModel = MODELS.find((m) => m.id === selectedModel) || MODELS[0];
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors text-sm font-medium text-gray-300"
+        className="flex w-full items-center justify-between gap-2 rounded-2xl border border-white/15 bg-white/5 px-4 py-2.5 text-left text-sm font-medium text-gray-100 shadow-md shadow-black/30 transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-blue-400/40"
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
       >
-        {currentModel.name}
+        <span className="truncate max-w-[80%]">{currentModel.name}</span>
         <ChevronDown size={16} />
       </button>
 
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute bottom-full mb-2 right-0 w-64 max-h-60 overflow-y-auto bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl z-20">
-            {MODELS.map((model) => (
-              <button
-                key={model.id}
-                onClick={() => {
-                  onModelSelect(model.id);
-                  setIsOpen(false);
-                }}
-                className={`w-full text-left px-4 py-3 text-sm hover:bg-white/5 transition-colors ${
-                  selectedModel === model.id ? "text-blue-400 bg-blue-400/10" : "text-gray-300"
-                }`}
-              >
-                {model.name}
-              </button>
-            ))}
+          <div className="absolute bottom-full right-0 z-30 mb-2 w-80 max-h-80 overflow-y-auto rounded-2xl border border-white/15 bg-[#181c24] shadow-2xl shadow-black/60 ring-1 ring-black/10 animate-fade-in">
+            <div className="py-1">
+              {MODELS.map((model) => (
+                <button
+                  key={model.id}
+                  onClick={() => {
+                    onModelSelect(model.id);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-2 text-left px-4 py-2.5 text-sm rounded-lg transition-colors duration-100
+                    ${selectedModel === model.id
+                      ? "bg-blue-500/10 text-blue-400 font-semibold ring-1 ring-blue-400/30"
+                      : "text-gray-200 hover:bg-white/5 hover:text-white"}
+                  `}
+                  tabIndex={0}
+                  aria-selected={selectedModel === model.id}
+                  role="option"
+                >
+                  <span className="truncate">{model.name}</span>
+                  {selectedModel === model.id && (
+                    <span className="ml-auto text-xs text-blue-400">Selected</span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </>
       )}

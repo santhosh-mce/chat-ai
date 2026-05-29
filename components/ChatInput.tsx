@@ -35,8 +35,8 @@ export default function ChatInput({ onSend, isLoading, onStop }: ChatInputProps)
   };
 
   return (
-    <div className="px-3 py-2 sm:px-4 sm:py-3 bg-black/30 backdrop-blur-md border-t border-white/10 sticky bottom-0">
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 relative">
+    <div className="sticky bottom-0 z-10 w-full overflow-hidden border-t border-white/10 bg-black/30 px-3 py-2 backdrop-blur-md sm:px-4 sm:py-3">
+      <div className="relative w-full px-0 sm:px-1">
         <form onSubmit={handleSubmit} className="relative flex items-end gap-2 rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md p-2 focus-within:ring-2 focus-within:ring-blue-500/40 transition-all shadow-sm shadow-black/20">
           <textarea
             ref={textareaRef}

@@ -5,17 +5,21 @@ import { UserCircle, Bot, Copy, RefreshCw, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
-import { motion } from "framer-motion";
 import "highlight.js/styles/github-dark.css";
+import ResponseSwitcher from "./ResponseSwitcher";
 
 interface MessageBubbleProps {
   role: "user" | "assistant" | "system";
   content: string;
+  messageId?: string;
+  versions?: { id: string; content: string }[];
+  activeVersion?: number;
+  setMessages?: any;
   onRegenerate?: () => void;
   isLast?: boolean;
 }
 
-export default function MessageBubble({ role, content, onRegenerate, isLast }: MessageBubbleProps) {
+export default function MessageBubble({ role, content, messageId, versions, activeVersion, setMessages, onRegenerate, isLast }: MessageBubbleProps) {
   const isUser = role === "user";
   const [copied, setCopied] = useState(false);
 
@@ -89,10 +93,8 @@ export default function MessageBubble({ role, content, onRegenerate, isLast }: M
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`flex gap-3 sm:gap-4 w-full rounded-3xl border border-white/8 p-4 sm:p-5 md:p-6 ${isUser ? "" : "bg-white/5 shadow-xl shadow-black/20"}`}
+    <div
+      className={`transform-gpu flex w-full gap-3 rounded-3xl border border-white/8 p-4 sm:gap-4 sm:p-5 md:p-6 ${isUser ? "" : "bg-white/5 shadow-xl shadow-black/20"}`}
     >
       <div className="shrink-0 mt-1">
         {isUser ? (
@@ -104,8 +106,8 @@ export default function MessageBubble({ role, content, onRegenerate, isLast }: M
         )}
       </div>
 
-      <div className="flex-1 overflow-hidden">
-        <article className="prose prose-invert max-w-none break-words overflow-x-auto text-base sm:text-[17px] md:text-lg leading-7 sm:leading-8 prose-headings:text-white prose-h1:text-2xl sm:prose-h1:text-3xl prose-h2:text-xl sm:prose-h2:text-2xl prose-h3:text-lg sm:prose-h3:text-xl prose-p:text-gray-100 prose-p:leading-7 sm:prose-p:leading-8 prose-strong:text-white prose-ul:text-gray-100 prose-ol:text-gray-100 prose-blockquote:border-l-blue-400/70 prose-blockquote:text-gray-200 prose-code:before:hidden prose-code:after:hidden prose-pre:bg-transparent prose-pre:p-0 prose-table:w-full">
+      <div className="min-w-0 flex-1 overflow-hidden">
+        <article className="prose prose-invert w-full max-w-none break-words overflow-x-auto text-base leading-7 text-gray-100 sm:text-[17px] sm:leading-8 md:text-lg prose-headings:text-white prose-h1:text-2xl sm:prose-h1:text-3xl prose-h2:text-xl sm:prose-h2:text-2xl prose-h3:text-lg sm:prose-h3:text-xl prose-p:text-gray-100 prose-p:leading-7 sm:prose-p:leading-8 prose-strong:text-white prose-ul:text-gray-100 prose-ol:text-gray-100 prose-blockquote:border-l-blue-400/70 prose-blockquote:text-gray-200 prose-code:before:hidden prose-code:after:hidden prose-pre:bg-transparent prose-pre:p-0 prose-table:w-full">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeHighlight]}
@@ -116,7 +118,11 @@ export default function MessageBubble({ role, content, onRegenerate, isLast }: M
         </article>
 
         {!isUser && (
-          <div className="mt-4 flex items-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            {versions && versions.length > 1 && setMessages ? (
+              <ResponseSwitcher message={{ id: messageId, versions, activeVersion }} setMessages={setMessages} />
+            ) : null}
+
             <button
               onClick={handleCopy}
               className="rounded-full border border-white/10 bg-white/5 p-1.5 text-gray-300 transition hover:bg-white/10 hover:text-white"
@@ -136,6 +142,6 @@ export default function MessageBubble({ role, content, onRegenerate, isLast }: M
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }

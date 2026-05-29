@@ -91,7 +91,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <Navbar />
           <div className="flex flex-1 overflow-hidden">
             <Sidebar />
-            <main className={`flex-1 overflow-hidden ${isSidebarOpen ? "hidden md:block" : "block"}`}>{children}</main>
+            <main
+              className={`flex-1 overflow-hidden ${isSidebarOpen ? "md:pl-[280px]" : "block"}`}
+            >
+              {children}
+            </main>
           </div>
         </>
       ) : (

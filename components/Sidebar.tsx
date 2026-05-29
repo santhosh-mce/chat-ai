@@ -3,52 +3,52 @@
 import { useStore } from "@/store/useStore";
 import ModelSelector from "./ModelSelector";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Plus, Settings, Image as ImageIcon, History, Trash2 } from "lucide-react";
+import {
+  MessageSquare,
+  Plus,
+  Settings,
+  Image as ImageIcon,
+  History,
+  Trash2,
+} from "lucide-react";
+
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function Sidebar() {
   const { isSidebarOpen, user } = useStore();
+
   const pathname = usePathname();
   const router = useRouter();
+
   const [chats, setChats] = useState<any[]>([]);
-
-  const realChats = chats.filter((chat) => {
-    const title = String(chat?.title || "").trim();
-    return title.length > 0 && title.toLowerCase() !== "new chat";
-  });
-
   const [isMobile, setIsMobile] = useState(false);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  const selectedModel = useStore((state) => state.selectedModel);
+  const setSelectedModel = useStore(
+    (state) => state.setSelectedModel
+  );
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (isSidebarOpen && window.innerWidth < 768) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
-    }
-    return () => {
-      document.body.classList.remove("overflow-hidden");
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
     };
-  }, [isSidebarOpen]);
+
+    checkMobile();
+
+    window.addEventListener("resize", checkMobile);
+
+    return () => {
+      window.removeEventListener("resize", checkMobile);
+    };
+  }, []);
 
   useEffect(() => {
     if (user) {
       fetchChats();
     }
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
-      useStore.setState({ isSidebarOpen: false });
-    }
-  }, [user, pathname]);
+  }, [user]);
 
   const fetchChats = async () => {
     try {
@@ -57,6 +57,7 @@ export default function Sidebar() {
           Authorization: `Bearer ${user?.token}`,
         },
       });
+
       if (res.ok) {
         const data = await res.json();
         setChats(data);
@@ -71,6 +72,7 @@ export default function Sidebar() {
       router.push("/login");
       return;
     }
+
     try {
       const res = await fetch("/api/chats", {
         method: "POST",
@@ -78,11 +80,20 @@ export default function Sidebar() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user.token}`,
         },
-        body: JSON.stringify({ title: "New Chat" }),
+        body: JSON.stringify({
+          title: "New Chat",
+        }),
       });
+
       if (res.ok) {
         const data = await res.json();
         router.push(`/chat/${data._id}`);
+
+        if (isMobile) {
+          useStore.setState({
+            isSidebarOpen: false,
+          });
+        }
       }
     } catch (error) {
       console.error(error);
@@ -92,7 +103,10 @@ export default function Sidebar() {
   const deleteChat = async (id: string) => {
     if (!user) return;
 
-    const confirmed = window.confirm("Delete this conversation?");
+    const confirmed = window.confirm(
+      "Delete this conversation?"
+    );
+
     if (!confirmed) return;
 
     try {
@@ -105,111 +119,237 @@ export default function Sidebar() {
 
       if (!res.ok) return;
 
-      setChats((prev) => prev.filter((chat) => chat._id !== id));
+      setChats((prev) =>
+        prev.filter((chat) => chat._id !== id)
+      );
 
       if (pathname === `/chat/${id}`) {
-        router.push("/chat/new");
+        router.push("/dashboard");
       }
     } catch (error) {
       console.error(error);
     }
   };
 
-  const selectedModel = useStore((state) => state.selectedModel);
-  const setSelectedModel = useStore((state) => state.setSelectedModel);
+  const realChats = chats.filter((chat) => {
+    const title = String(chat?.title || "").trim();
 
-  // Always show sidebar on desktop (md and up), toggle only on mobile
-  const showSidebar = typeof window !== "undefined" && window.innerWidth >= 768 ? true : isSidebarOpen;
+    return (
+      title.length > 0 &&
+      title.toLowerCase() !== "new chat"
+    );
+  });
+
+  const showSidebar = isMobile
+    ? isSidebarOpen
+    : true;
 
   return (
     <AnimatePresence>
       {showSidebar && (
         <>
-          {/* Backdrop overlay for mobile screens */}
-          <div
-            onClick={() => useStore.setState({ isSidebarOpen: false })}
-            className="fixed inset-0 bg-black/60 backdrop-blur-md z-40 md:hidden"
-          />
+          {/* Mobile Overlay */}
+          {isMobile && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() =>
+                useStore.setState({
+                  isSidebarOpen: false,
+                })
+              }
+              className="fixed inset-0 z-20 bg-black/70 backdrop-blur-sm"
+            />
+          )}
+
+          {/* Sidebar */}
           <motion.aside
-            initial={isMobile ? { x: "-100%" } : { width: 0, opacity: 0 }}
-            animate={isMobile ? { x: 0 } : { width: 280, opacity: 1 }}
-            exit={isMobile ? { x: "-100%" } : { width: 0, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed inset-y-0 left-0 z-50 w-[80vw] max-w-[320px] bg-[#09090b]/95 border-r border-white/10 flex flex-col backdrop-blur-xl overflow-hidden shrink-0 md:fixed md:inset-y-0 md:left-0 md:top-0 md:h-screen md:w-[280px] md:max-w-none md:z-40 md:bg-black/40"
+            initial={isMobile ? { x: "-100%" } : undefined}
+            animate={{ x: 0 }}
+            exit={isMobile ? { x: "-100%" } : undefined}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 30,
+            }}
+            className="
+              fixed
+              left-0
+              top-16
+              z-40
+              h-[calc(100vh-64px)]
+              w-[280px]
+              flex
+              flex-col
+              border-r
+              border-white/10
+              bg-[linear-gradient(180deg,rgba(6,7,10,0.98),rgba(9,11,18,0.96),rgba(15,23,42,0.96))]
+              shadow-2xl
+              shadow-black/50
+              backdrop-blur-2xl
+            "
           >
-          <div className="flex-1 overflow-y-auto p-4 w-full md:w-[280px] space-y-6">
-            <button
-              onClick={createNewChat}
-              className="w-full flex items-center gap-3 bg-white/10 hover:bg-white/20 p-3 rounded-2xl transition-colors text-white"
-            >
-              <Plus size={20} />
-              <span className="font-medium">New Chat</span>
-            </button>
+            {/* Top */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              
+              {/* New Chat */}
+              <button
+                onClick={createNewChat}
+                className="
+                  flex
+                  w-full
+                  items-center
+                  justify-center
+                  gap-2
+                  rounded-2xl
+                  border
+                  border-blue-400/30
+                  bg-gradient-to-r
+                  from-blue-500
+                  via-indigo-500
+                  to-purple-500
+                  px-4
+                  py-3
+                  text-sm
+                  font-semibold
+                  text-white
+                  transition
+                  hover:scale-[1.02]
+                "
+              >
+                <Plus size={18} />
+                <span>New Chat</span>
+              </button>
 
-            <div className="flex flex-col gap-2">
-              <Link href="/image-generator" className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${pathname === '/image-generator' ? 'bg-white/15 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                <ImageIcon size={20} />
-                <span>Image Generator</span>
-              </Link>
-              <Link href="/dashboard" className={`flex items-center gap-3 p-3 rounded-xl transition-colors ${pathname === '/dashboard' ? 'bg-white/15 text-white' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}>
-                <History size={20} />
-                <span>Dashboard</span>
-              </Link>
-            </div>
+              {/* Links */}
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/image-generator"
+                  className={`flex items-center gap-3 rounded-xl p-3 transition ${
+                    pathname === "/image-generator"
+                      ? "bg-white/15 text-white"
+                      : "text-gray-400 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <ImageIcon size={20} />
+                  <span>Image Generator</span>
+                </Link>
 
-            <div>
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3">Recent Chats</div>
-              <div className="max-h-[40vh] overflow-y-auto pr-1 space-y-1.5">
-                {realChats.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-white/10 bg-white/5 px-4 py-3 text-sm text-gray-400">No real conversations yet.</div>
-                ) : (
-                  realChats.map((chat) => {
-                    const isActive = pathname === `/chat/${chat._id}`;
-                    const title = String(chat.title || "Untitled");
-                    const displayTitle = title.length > 30 ? `${title.slice(0, 30)}...` : title;
+                <Link
+                  href="/dashboard"
+                  className={`flex items-center gap-3 rounded-xl p-3 transition ${
+                    pathname === "/dashboard"
+                      ? "bg-white/15 text-white"
+                      : "text-gray-400 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  <History size={20} />
+                  <span>Dashboard</span>
+                </Link>
+              </div>
 
-                    return (
-                      <div
-                        key={chat._id}
-                        className={`group flex items-center justify-between gap-2 rounded-xl px-3 py-2 transition-all duration-200 ${
-                          isActive
-                            ? "bg-white/15 text-white shadow-lg shadow-blue-500/10"
-                            : "text-gray-300 hover:bg-white/10 hover:text-white"
-                        }`}
-                      >
-                        <Link href={`/chat/${chat._id}`} className="flex min-w-0 flex-1 items-center gap-3 rounded-lg">
-                          <MessageSquare size={16} className="shrink-0 text-blue-300" />
-                          <span className="truncate text-sm font-medium">{displayTitle}</span>
-                        </Link>
+              {/* Chats */}
+              <div>
+                <div className="mb-3 px-3 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  Recent Chats
+                </div>
 
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            deleteChat(chat._id);
-                          }}
-                          className="rounded-full p-1.5 text-gray-400 opacity-0 transition hover:bg-white/10 hover:text-white group-hover:opacity-100 focus:opacity-100 focus:outline-none sm:opacity-100 sm:hover:bg-white/10"
-                          aria-label="Delete conversation"
+                <div className="space-y-2">
+                  {realChats.length === 0 ? (
+                    <div className="rounded-xl bg-white/5 p-3 text-sm text-gray-400">
+                      No chats yet
+                    </div>
+                  ) : (
+                    realChats.map((chat) => {
+                      const isActive =
+                        pathname === `/chat/${chat._id}`;
+
+                      return (
+                        <div
+                          key={chat._id}
+                          className={`
+                            group
+                            flex
+                            items-center
+                            justify-between
+                            gap-2
+                            rounded-xl
+                            px-3
+                            py-2
+                            transition
+                            ${
+                              isActive
+                                ? "bg-white/15 text-white"
+                                : "text-gray-300 hover:bg-white/10"
+                            }
+                          `}
                         >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    );
-                  })
-                )}
+                          <Link
+                            href={`/chat/${chat._id}`}
+                            className="flex flex-1 items-center gap-3 overflow-hidden"
+                          >
+                            <MessageSquare
+                              size={16}
+                            />
+
+                            <span className="truncate text-sm">
+                              {chat.title}
+                            </span>
+                          </Link>
+
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+
+                              deleteChat(chat._id);
+                            }}
+                            className="
+                              opacity-0
+                              group-hover:opacity-100
+                              transition
+                              p-1.5
+                              rounded-full
+                              hover:bg-white/10
+                            "
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-          
-          <div className="p-4 w-full md:w-[280px] border-t border-white/10 bg-black/10 flex flex-col gap-4">
-            <ModelSelector selectedModel={selectedModel} onModelSelect={setSelectedModel} />
-            <Link href="/settings" className="flex items-center gap-3 p-3 rounded-xl text-gray-400 hover:bg-white/5 hover:text-white transition-colors">
-              <Settings size={20} />
-              <span>Settings</span>
-            </Link>
-          </div>
-        </motion.aside>
+
+            {/* Bottom */}
+            <div className="border-t border-white/10 p-4 space-y-4">
+              <ModelSelector
+                selectedModel={selectedModel}
+                onModelSelect={setSelectedModel}
+              />
+
+              <Link
+                href="/settings"
+                className="
+                  flex
+                  items-center
+                  gap-3
+                  rounded-xl
+                  p-3
+                  text-gray-400
+                  transition
+                  hover:bg-white/5
+                  hover:text-white
+                "
+              >
+                <Settings size={20} />
+                <span>Settings</span>
+              </Link>
+            </div>
+          </motion.aside>
         </>
       )}
     </AnimatePresence>
